@@ -1,0 +1,17 @@
+# Ignoruj środowisko wirtualne
+venv/
+env/
+
+# Ignoruj pliki tymczasowe Pythona
+__pycache__/
+*.pyc
+
+# Ignoruj duże dane (bo mamy generator!)
+data/
+
+# Ignoruj ustawienia IDE (opcjonalne)
+.idea/
+.vscode/
+
+# Ignoruj wytrenowane modele (chyba że chcesz je trzymać, wtedy usuń tę linię)
+models/
