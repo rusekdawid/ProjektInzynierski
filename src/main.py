@@ -14,6 +14,7 @@ def menu():
     print("3. 🚀 Trenuj model AI (Wybierz zadanie)")
     print("4. 🔮 Generuj wyniki AI (Predict)")
     print("5. 📊 Ewaluacja (Oblicz PSNR/SSIM)")
+    print("6. 🖥️  URUCHOM GUI (Aplikacja Okienkowa)") # Nowa opcja
     print("0. Wyjście")
     
     choice = input("\nWybierz opcję: ")
@@ -54,6 +55,10 @@ if __name__ == "__main__":
         elif c == '5':
             # Uruchamiamy Twój istniejący skrypt evaluate.py
             os.system("python src/evaluate.py")
+        
+        elif c == '6':
+            print("Uruchamianie interfejsu...")
+            os.system("python gui.py")
             
         elif c == '0':
             sys.exit()
