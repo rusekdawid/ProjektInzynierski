@@ -13,36 +13,31 @@ class ClassicEnhancer:
         """
         if method == 'gaussian':
             # Rozmywa szum, ale też krawędzie
-            return cv2.GaussianBlur(image, (5, 5), 0)
+            return cv2.GaussianBlur(image, (3, 3), 0)
         
         elif method == 'median':
             # Zastępuje piksel medianą z sąsiadów - zachowuje krawędzie lepiej
-            return cv2.medianBlur(image, 5)
+            return cv2.medianBlur(image, 3)
         
         elif method == 'nlm':
             # Non-Local Means Denoising - szuka podobnych łat w całym obrazie
             # h=10 (siła filtrowania), hColor=10, templateWindowSize=7, searchWindowSize=21
-            return cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
+            return cv2.fastNlMeansDenoisingColored(image, None, 5, 5, 7, 21)
         
         else:
             return image
 
     def deblurring(self, image):
-        """
-        Redukcja rozmycia poprzez wyostrzanie (Sharpening).
-        Prawdziwe 'odwracanie' rozmycia (dekonwolucja) jest trudne bez znajomości jądra,
-        więc klasycznie stosuje się maskę wyostrzającą (Unsharp Masking).
-        """
-        # Tworzymy jądro wyostrzające (kernel)
-        # To macierz, która podbija różnice między pikselem środkowym a sąsiadami
-        kernel = np.array([[-1, -1, -1],
-                           [-1,  9, -1],
-                           [-1, -1, -1]])
+       
+        kernel = np.array([[ 0, -1,  0],
+                           [-1,  5, -1],
+                           [ 0, -1, 0]])
         
-        # Nakładamy filtr (splot)
-        sharpened = cv2.filter2D(image, -1, kernel)
-        return sharpened
+        sharp = cv2.filter2D(image, -1, kernel)
 
+        # mieszamy 70% sharp + 30% oryginał (mniej artefaktów)
+        out = cv2.addWeighted(sharp, 0.7, image, 0.3, 0)
+        return out
     def super_resolution(self, image, scale_factor=4, method='bicubic'):
         """
         Zwiększanie rozdzielczości metodami interpolacji.
@@ -75,7 +70,7 @@ if __name__ == "__main__":
         denoised = enhancer.denoising(img, method='nlm')
         cv2.imwrite('test_denoised.jpg', denoised)
         
-        # Test wyostrzania
+        # Test wyostrzania9
         print("Testuję wyostrzanie...")
         sharp = enhancer.deblurring(img)
         cv2.imwrite('test_sharp.jpg', sharp)

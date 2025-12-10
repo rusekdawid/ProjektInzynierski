@@ -22,37 +22,34 @@ class SRResNet(nn.Module):
     def __init__(self, num_channels=3, num_blocks=16, num_filters=64):
         super(SRResNet, self).__init__()
         
-        # 1. Wejście
         self.conv_input = nn.Conv2d(num_channels, num_filters, kernel_size=9, padding=4)
         self.prelu = nn.PReLU()
         
-        # 2. Blok Resztkowy (16 głębokich warstw)
         res_blocks = []
         for _ in range(num_blocks):
             res_blocks.append(ResidualBlockSR(num_filters))
         self.res_blocks = nn.Sequential(*res_blocks)
         
-        # 3. Połączenie środkowe
         self.conv_mid = nn.Conv2d(num_filters, num_filters, kernel_size=3, padding=1)
         self.bn_mid = nn.BatchNorm2d(num_filters)
         
-        # 4. Wyjście
         self.conv_output = nn.Conv2d(num_filters, num_channels, kernel_size=9, padding=4)
 
+        # --- OPTYMALIZACJA: Inicjalizacja wag (Kaiming) ---
+        # Pomaga modelowi szybciej zbiegać na początku treningu
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
     def forward(self, x):
-        # x to obraz wejściowy (zszumiony/rozmyty/powiększony)
         out_first = self.prelu(self.conv_input(x))
         out_res = self.res_blocks(out_first)
         out_mid = self.bn_mid(self.conv_mid(out_res))
         out = out_first + out_mid
         out = self.conv_output(out)
-        
-        # GLOBAL SKIP CONNECTION
-        # Model uczy się tylko poprawki (różnicy), a nie całego obrazu.
-        # To klucz do wysokich wyników w Noise i Blur.
         return x + out
-
-# Zostawiamy pustą klasę SimpleUNet tylko po to, żeby stare skrypty nie wywaliły błędu importu,
-# ale nie będziemy jej już używać.
-class SimpleUNet(nn.Module):
-    def __init__(self): super(SimpleUNet, self).__init__()
