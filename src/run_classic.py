@@ -4,7 +4,7 @@ from tqdm import tqdm
 import config as cfg
 
 def run_classic_all():
-    print("\n🏛️ METODY KLASYCZNE (Generowanie i czyszczenie)...")
+    print("\nMETODY KLASYCZNE (Generowanie i czyszczenie)...")
     
     # Definicja zadań: (Folder wejściowy, Folder wyjściowy, Funkcja przetwarzająca)
     tasks = {
@@ -26,7 +26,7 @@ def run_classic_all():
         files = list((cfg.PROCESSED_DIR / inp_n).glob('*'))
         
         if not files:
-            print(f"⚠️ Pusto w {inp_n}, pomijam.")
+            print(f"Pusto w {inp_n}, pomijam.")
             continue
 
         for f in tqdm(files, desc=f"Classic {inp_n}"):

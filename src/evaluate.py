@@ -83,7 +83,7 @@ def calculate_metrics(method_type, task_name, raw_map):
 
 if __name__ == "__main__":
     print("\n" + "="*50)
-    print(" 📊 RAPORT KOŃCOWY (PSNR / SSIM)")
+    print("RAPORT KOŃCOWY (PSNR / SSIM)")
     print("="*50)
     
     raw_map = load_raw_files_map()
@@ -124,4 +124,4 @@ if __name__ == "__main__":
     with open(json_path, 'w') as f:
         json.dump(results, f, indent=4)
         
-    print(f"\n✅ Zapisano szczegółowy raport do: {json_path}")
+    print(f"\nZapisano szczegółowy raport do: {json_path}")

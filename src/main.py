@@ -34,13 +34,8 @@ def clean_all_data():
     
     for p in paths_to_clean:
         if p.exists():
-            try:
-                shutil.rmtree(p)
-                print(f"Usunięto: {p}")
-            except Exception as e:
-                print(f"Błąd usuwania {p}: {e}")
-        else:
-            print(f"Folder {p} już jest pusty.")
+            shutil.rmtree(p)
+            print(f"Usunięto: {p}")
             
     print("Wyczyszczono. Możesz generować dane od nowa.")
 
@@ -73,13 +68,13 @@ def main():
             
         elif c == '3':
             task = ask_for_task("trenowania")
-            if task: train(task) # Zakładam, że import train działa
-            else: print("⚠️ Błędny wybór.")
+            if task: train.train_model(task) # Zakładam, że import train działa
+            else: print("Błędny wybór.")
 
         elif c == '4':
             task = ask_for_task("przetwarzania (AI)")
             if task: predict.run_prediction(task)
-            else: print("⚠️ Błędny wybór.")
+            else: print("Błędny wybór.")
             
         elif c == '5':
             if hasattr(evaluate, 'run_evaluation'):
@@ -88,15 +83,13 @@ def main():
                 os.system(f"{sys.executable} src/evaluate.py")
 
         elif c == '8':
-            confirm = input("⚠️ Czy na pewno usunąć wszystkie wygenerowane pliki i wyniki? (t/n): ")
+            confirm = input("Czy na pewno usunąć wszystkie wygenerowane pliki i wyniki? (t/n): ")
             if confirm.lower() == 't':
                 clean_all_data()
             else:
                 print("Anulowano.")
         elif c == '0':
             sys.exit()
-        else:
-            print("⚠️ Nieznana opcja.")
 
 if __name__ == "__main__":
     main()

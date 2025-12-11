@@ -74,7 +74,7 @@ def run_prediction(task_name):
     else:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    print(f"\n🔮 GENEROWANIE WYNIKÓW AI (SRResNet): {task_name.upper()}")
+    print(f"\nGENEROWANIE WYNIKÓW AI (SRResNet): {task_name.upper()}")
     print(f"   Urządzenie: {device}")
     
     # Ładowanie modelu
@@ -82,15 +82,15 @@ def run_prediction(task_name):
     path = cfg.MODELS_DIR / f'model_{task_name}.pth'
     
     if not path.exists():
-        print(f"❌ Nie znaleziono modelu: {path}")
-        print("   Najpierw uruchom trening (Opcja 3).")
+        print(f"Nie znaleziono modelu: {path}")
+        print("Najpierw uruchom trening (Opcja 3).")
         return
 
     try:
         model.load_state_dict(torch.load(path, map_location=device))
         model.eval()
     except Exception as e:
-        print(f"⚠️ Błąd ładowania wag: {e}")
+        print(f"Błąd ładowania wag: {e}")
         return
         
     # Przygotowanie folderów
@@ -103,7 +103,7 @@ def run_prediction(task_name):
     files = list(input_dir.glob('*'))
     
     if not files:
-        print(f"⚠️ Brak plików w {input_dir}. Uruchom najpierw generator danych (Opcja 1).")
+        print(f"Brak plików w {input_dir}. Uruchom najpierw generator danych (Opcja 1).")
         return
 
     # Pętla przetwarzania
@@ -130,7 +130,7 @@ def run_prediction(task_name):
             
         except RuntimeError as e:
             if "out of memory" in str(e):
-                print(f"⚠️ OOM na GPU dla {f.name}, przełączam na CPU...")
+                print(f"OOM na GPU dla {f.name}, przełączam na CPU...")
                 torch.cuda.empty_cache()
                 
                 # Przenosimy model na CPU tymczasowo
@@ -141,7 +141,7 @@ def run_prediction(task_name):
                 # Wracamy na GPU
                 model.to(device)
             else:
-                print(f"❌ Nieoczekiwany błąd dla {f.name}: {e}")
+                print(f"Nieoczekiwany błąd dla {f.name}: {e}")
 
 if __name__ == "__main__":
     # Testowe uruchomienie

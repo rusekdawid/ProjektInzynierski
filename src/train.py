@@ -79,7 +79,7 @@ class SmartDataset(Dataset):
 
 def train_model(task_name):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"\n🚀 START TRENINGU (SRResNet): {task_name.upper()}")
+    print(f"\nSTART TRENINGU (SRResNet): {task_name.upper()}")
     
     ds = SmartDataset(task_name)
     train_size = int(0.9 * len(ds))
@@ -93,7 +93,7 @@ def train_model(task_name):
     model_path = cfg.MODELS_DIR / f'model_{task_name}.pth'
 
     if model_path.exists():
-        print(f"⚠️  Znaleziono istniejący model: {model_path.name}")
+        print(f"  Znaleziono istniejący model: {model_path.name}")
         print("   [1] Dotrenuj (Kontynuacja)")
         print("   [2] Resetuj (Start od zera - WYMAGANE przy zmianie modelu)")
         choice = input("   Wybór (1/2): ")
@@ -101,13 +101,13 @@ def train_model(task_name):
         if choice == '1':
             try:
                 model.load_state_dict(torch.load(model_path, map_location=device))
-                print("   🔄 Wczytano wagi.")
+                print("Wczytano wagi.")
             except:
-                print("   ❌ Błąd wczytywania (inna architektura?). Resetuję.")
+                print("Błąd wczytywania (inna architektura?). Resetuję.")
         else:
-            print("   🆕 Resetuję wagi.")
+            print("Resetuję wagi.")
     else:
-        print("   🆕 Tworzę nowy model.")
+        print("Tworzę nowy model.")
 
     criterion_pix = nn.L1Loss()
     criterion_edge = EdgeLoss().to(device)
@@ -153,8 +153,8 @@ def train_model(task_name):
         if avg_val < best_loss:
             best_loss = avg_val
             torch.save(model.state_dict(), model_path)
-            print("      💾 Zapisano model!")
+            print("Zapisano model!")
 
     with open(cfg.RESULTS_DIR / f'history_{task_name}.json', 'w') as f:
         json.dump(history, f)
-    print(f"✅ Koniec.")
+    print(f"Koniec.")
