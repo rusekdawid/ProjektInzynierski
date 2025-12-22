@@ -11,7 +11,7 @@ import config as cfg
 import random
 import torch.nn.functional as F
 
-# --- LOSS FUNCTION ---
+#LOSS FUNCTION
 class EdgeLoss(nn.Module):
     def __init__(self):
         super(EdgeLoss, self).__init__()
@@ -25,7 +25,7 @@ class EdgeLoss(nn.Module):
         return torch.mean(torch.abs(F.conv2d(p_g, self.kx, padding=1) - F.conv2d(t_g, self.kx, padding=1)) +
                           torch.abs(F.conv2d(p_g, self.ky, padding=1) - F.conv2d(t_g, self.ky, padding=1)))
 
-# --- DATASET ---
+#DATASET 
 class SmartDataset(Dataset):
     def __init__(self, task):
         self.task = task
@@ -88,7 +88,7 @@ def train_model(task_name):
     t_load = DataLoader(t_ds, cfg.BATCH_SIZE, shuffle=True, num_workers=0)
     v_load = DataLoader(v_ds, cfg.BATCH_SIZE, shuffle=False)
     
-    # --- ZAWSZE UŻYWAMY SRResNet ---
+    #ZAWSZE UŻYWAMY SRResNet 
     model = SRResNet().to(device)
     model_path = cfg.MODELS_DIR / f'model_{task_name}.pth'
 

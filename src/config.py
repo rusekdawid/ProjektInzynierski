@@ -8,14 +8,13 @@ PROCESSED_DIR = BASE_DIR / 'processed'
 RESULTS_DIR = BASE_DIR / 'results'
 MODELS_DIR = Path('models')
 
-# KONFIGURACJA SPRZĘTOWA (NOWOŚĆ) ---
-# Wykrywamy raz i używamy wszędzie
+# KONFIGURACJA SPRZĘTOWA 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 NUM_WORKERS = 2 if torch.cuda.is_available() else 0  # Przyspiesza ładowanie danych w train.py
 PIN_MEMORY = True if torch.cuda.is_available() else False
 
-# PARAMETRY JAKOŚCIOWE 
-NUM_IMAGES = 20 
+# PARAMETRY 
+NUM_IMAGES = 10 
 NOISE_LEVEL = 15         
 BLUR_KERNEL = 7          
 SCALE_FACTOR = 4        

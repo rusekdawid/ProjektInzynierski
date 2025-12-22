@@ -6,10 +6,10 @@ import config as cfg
 from pathlib import Path
 
 def generate_all_datasets():
-    print("🏭 GENEROWANIE DANYCH (SZTYWNE PARAMETRY Z CONFIG.PY)...")
-    print(f"   - Noise Level: {cfg.NOISE_LEVEL}")
-    print(f"   - Blur Kernel: {cfg.BLUR_KERNEL}")
-    print(f"   - Scale Factor: {cfg.SCALE_FACTOR}")
+    print(" GENEROWANIE DANYCH (SZTYWNE PARAMETRY Z CONFIG.PY)...")
+    print(f"Noise Level: {cfg.NOISE_LEVEL}")
+    print(f"Blur Kernel: {cfg.BLUR_KERNEL}")
+    print(f"Scale Factor: {cfg.SCALE_FACTOR}")
     
     # 1. Pobieranie plików
     files = list(cfg.RAW_DIR.rglob('*.[jJ][pP][gG]')) + \

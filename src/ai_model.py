@@ -35,8 +35,7 @@ class SRResNet(nn.Module):
         
         self.conv_output = nn.Conv2d(num_filters, num_channels, kernel_size=9, padding=4)
 
-        # --- OPTYMALIZACJA: Inicjalizacja wag (Kaiming) ---
-        # Pomaga modelowi szybciej zbiegać na początku treningu
+        # Inicjalizacja wag
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')

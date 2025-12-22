@@ -5,7 +5,7 @@ class ClassicEnhancer:
 
     def denoising(self, image):
         
-        # Parametry: h=10 (siła), hColor=10, templateWindowSize=7, searchWindowSize=21
+        # Parametry h=10 (siła), hColor=10, templateWindowSize=7, searchWindowSize=21
         return cv2.fastNlMeansDenoisingColored(image, None, 5, 5, 7, 21)
 
     def deblurring(self, image):
@@ -16,7 +16,7 @@ class ClassicEnhancer:
         
         sharp = cv2.filter2D(image, -1, kernel)
 
-        # Mieszanie: 70% wyostrzonego + 30% oryginału
+        # Mieszanie 70% wyostrzonego + 30% oryginału
         out = cv2.addWeighted(sharp, 0.7, image, 0.3, 0)
         return out
 
@@ -28,5 +28,5 @@ class ClassicEnhancer:
         new_height = height * scale_factor
         new_width = width * scale_factor
         
-        # INTER_CUBIC to standard przemysłowy (np. Photoshop)
+        # INTER_CUBIC 
         return cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_CUBIC)

@@ -44,7 +44,7 @@ def apply_low_res(img, scale):
 
 # --- INTERFEJS ---
 
-st.title("💥 Prosty Symulator Zniszczeń")
+st.title("Prosty Symulator Zniszczeń")
 st.markdown("Narzędzie do generowania uszkodzonych obrazów w celu testowania algorytmów naprawczych.")
 
 # 1. Wczytywanie
@@ -60,7 +60,7 @@ if uploaded_file is not None:
 
     # 2. Panel Sterowania
     with st.sidebar:
-        st.header("⚙️ Ustawienia")
+        st.header("Ustawienia")
         method = st.radio("Wybierz metodę:", ["Szum (Noise)", "Rozmycie (Blur)", "Pikseloza (Low Res)"])
         
         intensity = 0
@@ -99,11 +99,11 @@ if uploaded_file is not None:
     res_pil.save(buf, format="PNG")
     
     st.download_button(
-        label="💾 Pobierz zniszczone zdjęcie",
+        label="Pobierz zniszczone zdjęcie",
         data=buf.getvalue(),
         file_name=f"zniszczone_{method}.png",
         mime="image/png"
     )
 
 else:
-    st.info("👈 Wgraj zdjęcie, aby rozpocząć.")
+    st.info("Wgraj zdjęcie, aby rozpocząć.")

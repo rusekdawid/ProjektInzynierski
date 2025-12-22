@@ -1,8 +1,8 @@
 import sys
 import os
-import shutil # Do usuwania folderów
+import shutil 
 
-# Importujemy moduły logiczne
+
 try:
     import config as cfg
     import data_generator
@@ -12,7 +12,6 @@ try:
     import evaluate
 except ImportError as e:
     print(f"Błąd importu: {e}")
-    print("Upewnij się, że uruchamiasz skrypt z głównego katalogu projektu.")
     sys.exit(1)
 
 def ask_for_task(action_name):
@@ -68,7 +67,7 @@ def main():
             
         elif c == '3':
             task = ask_for_task("trenowania")
-            if task: train.train_model(task) # Zakładam, że import train działa
+            if task: train.train_model(task) 
             else: print("Błędny wybór.")
 
         elif c == '4':
