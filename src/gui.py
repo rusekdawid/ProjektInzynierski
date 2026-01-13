@@ -1,109 +1,190 @@
+import sys
+import os
+
+# --- FIX ŚCIEŻEK ---
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+# -------------------
+
 import streamlit as st
-import cv2
 import numpy as np
+import cv2
 from PIL import Image
-import io
+import time
+# --- ZMIANA: Importujemy rygorystyczną metrykę ---
+from skimage.metrics import peak_signal_noise_ratio as psnr
+
+try:
+    from smart_system import SmartSystem
+except ImportError:
+    st.error("CRITICAL ERROR: Brak pliku smart_system.py!")
+    st.stop()
 
 # --- KONFIGURACJA STRONY ---
-st.set_page_config(page_title="Prosty Niszczyciel Zdjęć", page_icon="💥", layout="wide")
+st.set_page_config(page_title="AI Image Lab", layout="wide", page_icon="🔬")
 
-# --- FUNKCJE NISZCZĄCE (Czysty OpenCV) ---
+# --- CSS ---
+st.markdown("""
+<style>
+    .main-header {font-size: 2.5rem; color: #4F8BF9; font-weight: bold; text-align: center; margin-bottom: 20px;}
+    .stButton>button {
+        width: 100%; border-radius: 8px; font-weight: bold; font-size: 18px; 
+        background-color: #4F8BF9; color: white; height: 50px;
+    }
+    .metric-value {font-size: 1.2rem; font-weight: bold;}
+</style>
+""", unsafe_allow_html=True)
 
-def apply_noise(img, intensity):
+# --- FUNKCJE POMOCNICZE ---
+def calculate_psnr(img1, img2):
     """
-    Dodaje szum. Intensity (0-100) to odchylenie standardowe.
+    Oblicza PSNR używając standardu scikit-image (tak jak w evaluate.py).
     """
-    if intensity == 0: return img
-    noise = np.random.normal(0, intensity, img.shape)
-    noisy_img = np.clip(img + noise, 0, 255).astype(np.uint8)
-    return noisy_img
-
-def apply_blur(img, intensity):
-    """
-    Dodaje rozmycie. Intensity (1-30) to wielkość plamki.
-    """
-    k = int(intensity)
-    # Kernel musi być nieparzysty (np. 3, 5, 7...)
-    if k % 2 == 0: k += 1
-    if k < 1: k = 1
-    return cv2.GaussianBlur(img, (k, k), 0)
-
-def apply_low_res(img, scale):
-    """
-    Symuluje pikselozę. Scale (2-16) to krotność pomniejszenia.
-    """
-    if scale <= 1: return img
-    h, w = img.shape[:2]
+    # Wyrównanie wymiarów (na wszelki wypadek)
+    h = min(img1.shape[0], img2.shape[0])
+    w = min(img1.shape[1], img2.shape[1])
+    img1 = img1[:h, :w]
+    img2 = img2[:h, :w]
     
-    # 1. Zmniejszamy (tracimy dane)
-    small = cv2.resize(img, (w//scale, h//scale), interpolation=cv2.INTER_LINEAR)
+    # Używamy data_range=255, bo operujemy na uint8
+    return psnr(img1, img2, data_range=255)
+
+def apply_degradation(img, mode, val):
+    if mode == "Brak": return img
     
-    # 2. Powiększamy NEAREST (żebyś widział kwadraty na ekranie)
-    pixelated = cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)
-    return pixelated
-
-# --- INTERFEJS ---
-
-st.title("Prosty Symulator Zniszczeń")
-st.markdown("Narzędzie do generowania uszkodzonych obrazów w celu testowania algorytmów naprawczych.")
-
-# 1. Wczytywanie
-uploaded_file = st.file_uploader("Wgraj zdjęcie (JPG, PNG)", type=['jpg', 'png', 'jpeg'])
-
-if uploaded_file is not None:
-    # Konwersja pliku na obraz OpenCV
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    original_img = cv2.imdecode(file_bytes, 1) # BGR
-    
-    # Konwersja na RGB do wyświetlania
-    original_rgb = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
-
-    # 2. Panel Sterowania
-    with st.sidebar:
-        st.header("Ustawienia")
-        method = st.radio("Wybierz metodę:", ["Szum (Noise)", "Rozmycie (Blur)", "Pikseloza (Low Res)"])
+    if mode == "Szum":
+        if val == 0: return img
+        row, col, ch = img.shape
+        # UWAGA: Generujemy szum losowo. 
+        # Każde odświeżenie strony da troszkę inny rozkład szumu,
+        # więc PSNR może się wahać o +/- 0.1 dB względem testów statycznych.
+        gauss = np.random.normal(0, val, (row, col, ch))
+        return np.clip(img + gauss, 0, 255).astype(np.uint8)
         
-        intensity = 0
-        processed_img = original_img.copy()
+    elif mode == "Blur":
+        k = val if val % 2 != 0 else val + 1
+        return cv2.GaussianBlur(img, (k, k), 0)
+        
+    elif mode == "LowRes":
+        if val <= 1: return img
+        h, w = img.shape[:2]
+        small = cv2.resize(img, (w//val, h//val), interpolation=cv2.INTER_LINEAR)
+        return cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)
+    return img
 
-        if method == "Szum (Noise)":
-            intensity = st.slider("Poziom szumu", 0, 100, 30)
-            processed_img = apply_noise(original_img, intensity)
-            
-        elif method == "Rozmycie (Blur)":
-            intensity = st.slider("Siła rozmycia", 1, 31, 15)
-            processed_img = apply_blur(original_img, intensity)
-            
-        elif method == "Pikseloza (Low Res)":
-            intensity = st.slider("Skala pikseli", 2, 16, 6)
-            processed_img = apply_low_res(original_img, intensity)
+# --- ŁADOWANIE SYSTEMU ---
+@st.cache_resource
+def get_system():
+    return SmartSystem()
 
-    # 3. Wyświetlanie (Dwie kolumny)
-    col1, col2 = st.columns(2)
+system = get_system()
+
+# ==========================================
+# GŁÓWNY INTERFEJS
+# ==========================================
+
+st.markdown('<p class="main-header"> Laboratorium Naprawy Obrazu</p>', unsafe_allow_html=True)
+
+# --- PANEL BOCZNY ---
+with st.sidebar:
+    st.header("1. Wczytaj")
+    uploaded_file = st.file_uploader("Wybierz plik", type=['jpg', 'png', 'jpeg'])
     
+    st.markdown("---")
+    st.header("2. Degradacja")
+    deg_mode = st.selectbox("Uszkodzenie:", ["Brak", "Szum", "Blur", "LowRes"])
+    
+    val = 0
+    if deg_mode == "Szum": val = st.slider("Poziom", 0, 40, 20)
+    elif deg_mode == "Blur": val = st.slider("Poziom", 3, 15, 7, step=2)
+    elif deg_mode == "LowRes": val = st.slider("Skala", 2, 8, 4)
+
+# --- LOGIKA ---
+if uploaded_file:
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    original_img = cv2.cvtColor(cv2.imdecode(file_bytes, 1), cv2.COLOR_BGR2RGB)
+    
+    # Degradacja
+    processed_img = apply_degradation(original_img, deg_mode, val)
+    
+    # Oblicz PSNR dla zepsutego (Metoda Rygorystyczna)
+    psnr_bad = calculate_psnr(original_img, processed_img)
+
+    # --- UKŁAD KOLUMN ---
+    col1, col2 = st.columns(2)
+
     with col1:
-        st.subheader("Oryginał")
-        st.image(original_rgb, use_container_width=True)
-        st.caption(f"Rozmiar: {original_img.shape[1]}x{original_img.shape[0]}")
+        st.subheader(" Obraz Zdegradowany")
+        st.image(processed_img, use_container_width=True)
+        # Metryka
+        st.info(f" Jakość (PSNR): **{psnr_bad:.2f} dB**")
+        
+        st.write("---")
+        st.write("**Panel Diagnostyczny:**")
+        img_bgr = cv2.cvtColor(processed_img, cv2.COLOR_RGB2BGR)
+        detected = system.detect_problem(img_bgr)
+        
+        if detected == 'clean': st.success("System widzi: **CZYSTY**")
+        elif detected == 'noise': st.error("System widzi: **SZUM**")
+        elif detected == 'blur': st.warning("System widzi: **ROZMYCIE**")
+        elif detected == 'low_res': st.warning("System widzi: **PIKSELOZĘ**")
 
     with col2:
-        st.subheader("Po zniszczeniu")
-        processed_rgb = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
-        st.image(processed_rgb, use_container_width=True)
-        st.caption(f"Efekt: {method} | Siła: {intensity}")
+        st.subheader(" Wynik Naprawy")
+        result_placeholder = st.empty()
+        metric_placeholder = st.empty()
+        
+        
+        
+        if st.button(" URUCHOM AI"):
+            with st.spinner("Przetwarzanie..."):
+                start_t = time.time()
+                
+                mode_map = 'Auto'
+                
+                
+                res_img, msg, used_mode = system.process_image(processed_img, mode_map)
+                
+                # Wyświetlenie
+                result_placeholder.image(res_img, use_container_width=True)
+                
+                # Oblicz PSNR dla naprawionego (Metoda Rygorystyczna)
+                psnr_good = calculate_psnr(original_img, res_img)
+                gain = psnr_good - psnr_bad
+                
+                # Metryka z Deltą (Zielona strzałka)
+                metric_placeholder.metric(label=" Jakość (PSNR) po naprawie", 
+                                          value=f"{psnr_good:.2f} dB", 
+                                          delta=f"{gain:+.2f} dB")
+        else:
+            result_placeholder.info("Kliknij przycisk, aby naprawić.")
 
-    # 4. Pobieranie
-    st.divider()
-    res_pil = Image.fromarray(processed_rgb)
-    buf = io.BytesIO()
-    res_pil.save(buf, format="PNG")
+    # --- ZOOM ---
+    st.markdown("---")
+    st.subheader(" Inspekcja Detali (Zoom)")
     
-    st.download_button(
-        label="Pobierz zniszczone zdjęcie",
-        data=buf.getvalue(),
-        file_name=f"zniszczone_{method}.png",
-        mime="image/png"
-    )
+    if 'res_img' in locals():
+        h, w, _ = original_img.shape
+        center_y, center_x = h // 2, w // 2
+        crop_size = 100
+        y1 = max(0, center_y - crop_size)
+        y2 = min(h, center_y + crop_size)
+        x1 = max(0, center_x - crop_size)
+        x2 = min(w, center_x + crop_size)
+        
+        crop_bad = processed_img[y1:y2, x1:x2]
+        crop_good = res_img[y1:y2, x1:x2]
+        
+        zoom_factor = 4
+        crop_bad_zoom = cv2.resize(crop_bad, None, fx=zoom_factor, fy=zoom_factor, interpolation=cv2.INTER_NEAREST)
+        crop_good_zoom = cv2.resize(crop_good, None, fx=zoom_factor, fy=zoom_factor, interpolation=cv2.INTER_NEAREST)
+        
+        z1, z2 = st.columns(2)
+        with z1: st.image(crop_bad_zoom, caption="Zbliżenie: Przed", use_container_width=True)
+        with z2: st.image(crop_good_zoom, caption="Zbliżenie: Po", use_container_width=True)
+            
+    else:
+        st.caption("Napraw zdjęcie, aby zobaczyć porównanie detali.")
 
 else:
-    st.info("Wgraj zdjęcie, aby rozpocząć.")
+    st.info(" Wgraj zdjęcie z panelu po lewej.")

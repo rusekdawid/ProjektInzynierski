@@ -52,3 +52,7 @@ class SRResNet(nn.Module):
         out = out_first + out_mid
         out = self.conv_output(out)
         return x + out
+
+# --- FIX: ALIAS DLA KOMPATYBILNOŚCI ---
+# To sprawia, że reszta programu (smart_system.py) "widzi" ten model jako SimpleUNet
+SimpleUNet = SRResNet

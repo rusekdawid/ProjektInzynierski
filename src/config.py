@@ -3,9 +3,9 @@ import torch
 
 #ŚCIEŻKI
 BASE_DIR = Path('data')
-RAW_DIR = BASE_DIR / 'raw'
-PROCESSED_DIR = BASE_DIR / 'processed'
-RESULTS_DIR = BASE_DIR / 'results'
+RAW_DIR = BASE_DIR / 'val_raw'
+PROCESSED_DIR = BASE_DIR / 'val_processed'
+RESULTS_DIR = BASE_DIR / 'val_results'
 MODELS_DIR = Path('models')
 
 # KONFIGURACJA SPRZĘTOWA 
@@ -15,9 +15,9 @@ PIN_MEMORY = True if torch.cuda.is_available() else False
 
 # PARAMETRY 
 NUM_IMAGES = 10 
-NOISE_LEVEL = 15         
-BLUR_KERNEL = 7          
-SCALE_FACTOR = 4        
+NOISE_LEVEL = 10         
+BLUR_KERNEL = 3          
+SCALE_FACTOR = 2        
 
 #TRENING 
 IMG_SIZE = 128           
